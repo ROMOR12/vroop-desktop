@@ -1,0 +1,25 @@
+name: keep-render-awake
+
+# Mantiene despierto el backend de Vroop en Render (plan gratis)
+# haciendo ping al health endpoint cada 5 minutos.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: keep-render-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Vroop health
+        run: |
+          set -e
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 120 https://vroop-api.onrender.com/actuator/health)
+          echo "HTTP $code"
+          test "$code" = "200"
